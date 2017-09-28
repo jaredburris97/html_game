@@ -1,0 +1,21 @@
+-----Links-----
+Start:	https://mozdevs.github.io/html5-games-workshop/en/guides/platformer/initialise-phaser/
+Phaser:	https://photonstorm.github.io/phaser-ce/
+		http://phaser.io/download/stable
+Resources: https://mozdevs.github.io/html5-games-workshop/en/bonus/resources/
+
+-----Links-----
+
+Step 1: Run a local server
+
+Commands: cd "HTML PLATFORM GAME"
+		 browser-sync start --server --files="**/main.js"
+
+Step 2: Follow guide from the Start: link.
+
+
+
+
+
+
+CURRENT PAGE: https://mozdevs.github.io/html5-games-workshop/en/guides/platformer/moving-forward/
