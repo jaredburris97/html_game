@@ -62,7 +62,7 @@ Hero.prototype.stopJumpBoost = function () {
 };
 
 Hero.prototype.bounce = function () {
-    const BOUNCE_SPEED = 500;
+    const BOUNCE_SPEED = 300;
     this.body.velocity.y = -BOUNCE_SPEED;
 };
 
