@@ -7,7 +7,8 @@ function Projectile(game, x, y) {
     this.anchor.set(0.5, 0.5);
     this.game.physics.enable(this);
     this.body.collideWorldBounds = true;
-
+    this.Projectile.allowGravity = false;
+    Projectile.enableBody = true;
 }
 
 //
