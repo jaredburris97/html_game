@@ -2,6 +2,14 @@
 // Sprites
 // =============================================================================
 
+// Projectile
+function Projectile(game, x, y) {
+    this.anchor.set(0.5, 0.5);
+    this.game.physics.enable(this);
+    this.body.collideWorldBounds = true;
+
+}
+
 //
 // Hero
 //
@@ -16,14 +24,16 @@ function Hero(game, x, y) {
     this.game.physics.enable(this);
     this.body.collideWorldBounds = true;
     // animations
-    this.animations.add('stop', [0]);
+    this.animations.add('stop', [0, 1], 1, true);
     this.animations.add('run', [1, 2], 8, true); // 8fps looped
     this.animations.add('jump', [3]);
     this.animations.add('fall', [4]);
-    this.animations.add('die', [5, 6, 5, 6, 5, 6, 5, 6], 12); // 12fps no loop
+    this.animations.add('die', [5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6], 8); // 12fps no loop
     // starting animation
     this.animations.play('stop');
-}
+
+    console.log("Hero function position: " + this.position);
+};
 
 // inherit from Phaser.Sprite
 Hero.prototype = Object.create(Phaser.Sprite.prototype);
@@ -127,7 +137,7 @@ function Spider(game, x, y) {
     this.anchor.set(0.5);
     // animation
     this.animations.add('crawl', [0, 1, 2], 8, true);
-    this.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
+    this.animations.add('die', [0,4,1,3,2,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,3,3,3,3,3,3,3,3,3], 12);
     this.animations.play('crawl');
 
     // physic properties
@@ -136,7 +146,7 @@ function Spider(game, x, y) {
     this.body.velocity.x = Spider.SPEED;
 }
 
-Spider.SPEED = 100;
+Spider.SPEED = 150;
 
 // inherit from Phaser.Sprite
 Spider.prototype = Object.create(Phaser.Sprite.prototype);
@@ -149,6 +159,13 @@ Spider.prototype.update = function () {
     }
     else if (this.body.touching.left || this.body.blocked.left) {
         this.body.velocity.x = Spider.SPEED; // turn right
+    }
+
+    if (this.body.velocity.x < 0) {
+        this.scale.x = -1;
+    }
+    else if (this.body.velocity.x > 0) {
+        this.scale.x = 1;
     }
 };
 
@@ -189,8 +206,10 @@ LoadingState.preload = function () {
     this.game.load.image('grass:1x1', 'images/grass_1x1.png');
     this.game.load.image('key', 'images/key.png');
 
+    this.game.load.image('projectile', 'images/projectile.png', 4, 4);
+
     this.game.load.spritesheet('decoration', 'images/decor.png', 42, 42);
-    this.game.load.spritesheet('hero', 'images/hero.png', 36, 42);
+    this.game.load.spritesheet('hero', 'images/hero.png', 36, 42);          //determines size of frames width, height
     this.game.load.spritesheet('coin', 'images/coin_animated.png', 22, 22);
     this.game.load.spritesheet('spider', 'images/spider.png', 42, 32);
     this.game.load.spritesheet('door', 'images/door.png', 42, 66);
@@ -220,7 +239,8 @@ PlayState.init = function (data) {
     this.keys = this.game.input.keyboard.addKeys({
         left: Phaser.KeyCode.LEFT,
         right: Phaser.KeyCode.RIGHT,
-        up: Phaser.KeyCode.UP
+        up: Phaser.KeyCode.UP,
+        downArrow: Phaser.KeyCode.DOWN,
     });
 
     this.coinPickupCount = 0;
@@ -247,6 +267,8 @@ PlayState.create = function () {
     this.game.add.image(0, 0, 'background');
     this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
 
+    this.game.add.image(70, 522, 'projectile');
+
     // create UI score boards
     this._createHud();
 };
@@ -268,6 +290,10 @@ PlayState._handleCollisions = function () {
     this.game.physics.arcade.collide(this.spiders, this.platforms);
     this.game.physics.arcade.collide(this.spiders, this.enemyWalls);
     this.game.physics.arcade.collide(this.hero, this.platforms);
+
+    //console.log(this.projectiles);
+    this.game.physics.arcade.collide(this.spiders, this.projectile);    //Spiders kill each other?
+    this.game.physics.arcade.collide(this.spiders, this.projectile, this._onEnemyVsProjectile, null, this);
 
     // hero vs coins (pick up)
     this.game.physics.arcade.overlap(this.hero, this.coins, this._onHeroVsCoin,
@@ -293,6 +319,10 @@ PlayState._handleInput = function () {
     else if (this.keys.right.isDown) { // move hero right
         this.hero.move(1);
     }
+    else if (this.keys.downArrow.isDown) {
+        console.log("Firing gun...");
+        fireGun();
+    }
     else { // stop
         this.hero.move(0);
     }
@@ -306,6 +336,12 @@ PlayState._handleInput = function () {
     else {
         this.hero.stopJumpBoost();
     }
+};
+
+PlayState._onEnemyVsProjectile = function (enemy, projectiles) {
+    enemy.die();
+    this.sfx.stomp.play();
+    enemy.body.touching = enemy.body.wasTouching;
 };
 
 PlayState._onHeroVsKey = function (hero, key) {
@@ -363,6 +399,7 @@ PlayState._goToNextLevel = function () {
     }, this);
 };
 
+
 PlayState._loadLevel = function (data) {
     // create all the groups/layers that we need
     this.bgDecoration = this.game.add.group();
@@ -372,8 +409,12 @@ PlayState._loadLevel = function (data) {
     this.enemyWalls = this.game.add.group();
     this.enemyWalls.visible = false;
 
+    this.projectiles = this.game.add.group();
+
     // spawn hero and enemies
-    this._spawnCharacters({hero: data.hero, spiders: data.spiders});
+    this._spawnCharacters({hero: data.hero, spiders: data.spiders, projectile: data.projectile});
+
+    console.log(this.hero.position);
 
     // spawn level decoration
     data.decoration.forEach(function (deco) {
@@ -404,6 +445,20 @@ PlayState._spawnCharacters = function (data) {
     // spawn hero
     this.hero = new Hero(this.game, data.hero.x, data.hero.y);
     this.game.add.existing(this.hero);
+
+    console.log(this.hero.position.x);
+    console.log(this.hero.position.y);
+    let heroX = this.hero.position.x;
+    let heroY = this.hero.position.y;
+
+    // PlayState._spawnProjectile = function (x, y) {
+    //     this.projectile = this.projectiles.create(heroX, heroY, 'projectile');
+    //     this.projectile.anchor.setTo(0.5, 0.5);
+    //     this.game.physics.enable(this.projectile);
+    //     this.projectile.body.allowGravity = false;
+    //     this.projectile.body.enable = true;
+    //     console.log(this.projectile);
+    // }
 };
 
 PlayState._spawnPlatform = function (platform) {
@@ -418,6 +473,14 @@ PlayState._spawnPlatform = function (platform) {
     // spawn invisible walls at each side, only detectable by enemies
     this._spawnEnemyWall(platform.x, platform.y, 'left');
     this._spawnEnemyWall(platform.x + sprite.width, platform.y, 'right');
+};
+
+function fireGun() {
+    if (this.isFrozen) { return; }
+
+    const BULLET_SPEED = 500;
+
+    console.log("downArrow pressed, fireGun() called. Gun fired?");
 };
 
 PlayState._spawnEnemyWall = function (x, y, side) {

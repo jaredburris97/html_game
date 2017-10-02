@@ -3,6 +3,9 @@ Start:	https://mozdevs.github.io/html5-games-workshop/en/guides/platformer/initi
 Phaser:	https://photonstorm.github.io/phaser-ce/
 		http://phaser.io/download/stable
 Resources: https://mozdevs.github.io/html5-games-workshop/en/bonus/resources/
+	
+	Shoot the pointer: https://phaser.io/examples/v2/arcade-physics/shoot-the-pointer
+	
 
 -----Links-----
 
