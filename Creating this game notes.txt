@@ -16,9 +16,11 @@ Commands: cd "HTML PLATFORM GAME"
 
 Step 2: Follow guide from the Start: link.
 
-
-
-
-
-
 CURRENT PAGE: https://mozdevs.github.io/html5-games-workshop/en/guides/platformer/moving-forward/
+
+FEATURE LIST:
+	- gun can destroy platforms/blocks 1x1
+	- hero can pickup power ups that change how gun fires
+	- flying botship that spawns new enemy bots
+	- bots fire bullets
+	- hero can fire multiple bullets
