@@ -1,20 +1,9 @@
 // =============================================================================
 // Sprites
 // =============================================================================
-
-// Projectile
-function Projectile(game, x, y) {
-    this.anchor.set(0.5, 0.5);
-    this.game.physics.enable(this);
-    this.body.collideWorldBounds = true;
-    this.Projectile.allowGravity = false;
-    Projectile.enableBody = true;
-}
-
 //
 // Hero
 //
-
 function Hero(game, x, y) {
     // call Phaser.Sprite constructor
     Phaser.Sprite.call(this, game, x, y, 'hero');
@@ -123,7 +112,7 @@ Hero.prototype._getAnimationName = function () {
     else if (this.body.velocity.x !== 0 && this.body.touching.down) {
         name = 'run';
     }
-
+    //console.log(name);
     return name;
 };
 
@@ -145,7 +134,7 @@ function Spider(game, x, y) {
     this.game.physics.enable(this);
     this.body.collideWorldBounds = true;
     this.body.velocity.x = Spider.SPEED;
-}
+};
 
 Spider.SPEED = 150;
 
@@ -177,25 +166,49 @@ Spider.prototype.die = function () {
         this.kill();
     }, this);
 };
+//
+// Projectile
+//
+function Projectile(game, x, y) {
+
+    Phaser.Sprite.call(this, game, x, y, 'projectile');
+
+    this.anchor.set(0.5, 0.5);
+
+    this.game.physics.enable(this);
+    this.body.collideWorldBounds = true;
+    this.Projectile.allowGravity = false;
+    Projectile.enableBody = true;
+    console.log("Projectile constructor created...");
+};
+Projectile.prototype = Object.create(Phaser.Sprite.prototype);
+Projectile.prototype.constructor = Projectile;
+Projectile.prototype.move = function (direction) {
+    if (this.isFrozen) { return; }
+    const BULLET_SPEED = 500;
+    this.body.velocity.x = direction * BULLET_SPEED;
+     if (this.body.velocity.x < 0) {
+        this.scale.x = -1;
+    }
+    else if (this.body.velocity.x > 0) {
+        this.scale.x = 1;
+    }
+};
 
 // =============================================================================
 // Loading state
 // =============================================================================
-
-LoadingState = {};
-
+LoadingState = {};  // Loading state object
 LoadingState.init = function () {
     // keep crispy-looking pixels
     this.game.renderer.renderSession.roundPixels = true;
 };
-
-LoadingState.preload = function () {
+LoadingState.preload = function () {    // Preload assets
     this.game.load.json('level:0', 'data/level00.json');
     this.game.load.json('level:1', 'data/level01.json');
     this.game.load.json('level:2', 'data/level02.json');
 
     this.game.load.image('font:numbers', 'images/numbers.png');
-
     this.game.load.image('icon:coin', 'images/coin_icon.png');
     this.game.load.image('background', 'images/background.png');
     this.game.load.image('invisible-wall', 'images/invisible_wall.png');
@@ -223,7 +236,6 @@ LoadingState.preload = function () {
     this.game.load.audio('sfx:door', 'audio/door.wav');
     this.game.load.audio('bgm', ['audio/bgm.mp3', 'audio/bgm.ogg']);
 };
-
 LoadingState.create = function () {
     this.game.state.start('play', true, false, {level: 0});
 };
@@ -231,10 +243,9 @@ LoadingState.create = function () {
 // =============================================================================
 // Play state
 // =============================================================================
-
 PlayState = {};
 
-const LEVEL_COUNT = 3;
+const LEVEL_COUNT = 11;
 
 PlayState.init = function (data) {
     this.keys = this.game.input.keyboard.addKeys({
