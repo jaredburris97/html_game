@@ -33,7 +33,7 @@ Hero.prototype.move = function (direction) {
     // guard
     if (this.isFrozen) { return; }
 
-    const SPEED = 200;
+    const SPEED = 250;
     this.body.velocity.x = direction * SPEED;
 
     // update image flipping & animations
@@ -46,7 +46,7 @@ Hero.prototype.move = function (direction) {
 };
 
 Hero.prototype.jump = function () {
-    const JUMP_SPEED = 400;
+    const JUMP_SPEED = 500;
     let canJump = this.body.touching.down && this.alive && !this.isFrozen;
 
     if (canJump || this.isBoosting) {
@@ -126,14 +126,14 @@ function Spider(game, x, y) {
     this.anchor.set(0.5);
     // animation
     this.animations.add('crawl', [0, 1, 2], 8, true);
-    this.animations.add('die', [0,4,1,3,2,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,3,3,3,0,3,3,3,3,0,3,3,3,3], 12);
+    this.animations.add('die', [0,4,1,3,2,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,4,3,0,4,3,4,0,3,4,3,0,4,3,4], 12);
     this.animations.play('crawl');
     // physic properties
     this.game.physics.enable(this);
     this.body.collideWorldBounds = true;
     this.body.velocity.x = Spider.SPEED;
 };
-Spider.SPEED = 200;
+Spider.SPEED = 300;
 // inherit from Phaser.Sprite
 Spider.prototype = Object.create(Phaser.Sprite.prototype);
 Spider.prototype.constructor = Spider;
@@ -165,15 +165,22 @@ Spider.prototype.die = function () {
 // Projectile
 //
 function Projectile(game, x, y) {
-    console.log("projectile x is ",x);
-    console.log("projectile y is ",y);
+    console.log(game);
+    //console.log(this);
+    //Move spawned object off the stage
+    y = y + 500;
+    //console.log("projectile x is ",x);
+    //console.log("projectile y is ",y);
     Phaser.Sprite.call(this, game, x, y, 'projectile');
     this.anchor.set(0.5, 0.5);
     this.game.physics.enable(this);
-    this.body.collideWorldBounds = true;
+    //Fly out of world
+    this.body.collideWorldBounds = false;
     this.body.allowGravity = false;
-    Projectile.enableBody = true;
-    console.log("Projectile constructor created...");
+    //We don't want the projectile in the world until gun is fired
+    this.enableBody = false;
+    this.visible = false;
+    console.log("Projectile constructor completed...");
 };
 Projectile.prototype = Object.create(Phaser.Sprite.prototype);
 Projectile.prototype.constructor = Projectile;
@@ -181,7 +188,7 @@ Projectile.prototype.constructor = Projectile;
 Projectile.prototype.move = function (direction) {
     if (this.isFrozen) { return; }
 
-    const BULLET_SPEED = 500;
+    const BULLET_SPEED = 1000;
     this.body.velocity.x = direction * BULLET_SPEED;
 
     //flips direction based on travel direction
@@ -191,6 +198,63 @@ Projectile.prototype.move = function (direction) {
     else if (this.body.velocity.x > 0) {
         this.scale.x = 1;
     }
+};
+
+//
+// Big Boss MR. CLEAN
+//
+const BOSS_SPEED = 325;
+function Boss(game, x, y) {
+    console.log(this);
+    console.log("boss x is ",x);
+    console.log("boss y is ",y);
+
+    Phaser.Sprite.call(this, game, x, y, 'boss');
+    this.anchor.set(0.5, 0.5);
+    this.game.physics.enable(this);
+    this.body.collideWorldBounds = true;
+    this.body.allowGravity = false;
+    //We don't want the boss in the world until the LAST LEVEL
+    this.enableBody = true;
+    this.visible = true;
+    this.body.velocity.x = Boss.BOSS_SPEED;
+    console.log("Boss constructor created...");
+};
+Boss.prototype = Object.create(Phaser.Sprite.prototype);
+Boss.prototype.constructor = Boss;
+
+Boss.prototype.move = function (direction) {
+    if (this.isFrozen) { return; }
+
+    this.body.velocity.x = direction * BOSS_SPEED;
+
+    //These if statements flip the image base on current velocity direction
+     if (this.body.velocity.x < 0) {
+        this.scale.x = -1;
+    }
+    else if (this.body.velocity.x > 0) {
+        this.scale.x = 1;
+    }
+};
+
+Boss.prototype.update = function () {
+
+    // check against walls and reverse direction if necessary
+    if (this.body.touching.right || this.body.blocked.right) {
+        this.body.velocity.x = -Boss.BOSS_SPEED; // turn left
+    }
+    else if (this.body.touching.left || this.body.blocked.left) {
+        this.body.velocity.x = Boss.BOSS_SPEED; // turn right
+    }
+    this.body.velocity.x = this.body.velocity.x+100;
+
+    // These if statements can be used to move the boss in the same direction as the hero :o
+    // if (this.hero.scale.x===1) {
+        //this.Boss.move(1);
+    // }
+    // else if (this.hero.scale.x===-1) {
+        //this.Boss.move(-1);
+    // }
 };
 
 // =============================================================================
@@ -219,13 +283,18 @@ LoadingState.preload = function () {    // Preload assets
     this.game.load.image('icon:coin', './src/images/coin_icon.png');
     this.game.load.image('background', './src/images/background.png');
     this.game.load.image('invisible-wall', './src/images/invisible_wall.png');
-    this.game.load.image('ground', './src/images/ground.png');
+
+    this.game.load.image('lavag', './src/images/lavag.png', 966, 84);
+    this.game.load.image('ground', './src/images/ground.png', 966, 84);
+
     this.game.load.image('grass:8x1', './src/images/grass_8x1.png');
     this.game.load.image('grass:6x1', './src/images/grass_6x1.png');
     this.game.load.image('grass:4x1', './src/images/grass_4x1.png');
     this.game.load.image('grass:2x1', './src/images/grass_2x1.png');
     this.game.load.image('grass:1x1', './src/images/grass_1x1.png');
     this.game.load.image('key', './src/images/key.png');
+
+    this.game.load.image('boss', './src/images/mrclean.png', 300, 300);
 
     this.game.load.image('projectile', './src/images/projectile.png', 16, 3);
 
@@ -299,6 +368,15 @@ PlayState.update = function () {
     // update scoreboards
     this.coinFont.text = `x${this.coinPickupCount}`;
     this.keyIcon.frame = this.hasKey ? 1 : 0;
+
+    // detect if the ground is lava, if so, kill the player
+    //console.log(this.level);
+    // if (this.level > 10) {
+    //     if (this.hero.y = 524) {
+    //         this.hero.body.enable = false;
+    //         this.hero.die();
+    //     }
+    // }
 };
 
 PlayState.shutdown = function () {
@@ -311,8 +389,16 @@ PlayState._handleCollisions = function () {
     this.game.physics.arcade.collide(this.hero, this.platforms);
 
     //console.log(this.projectile);
-    //this.game.physics.arcade.collide(this.spiders, this.projectile);    //Spiders kill each other?
+ 
+    //PROJECTILE HITS WALLS
+    //this.game.physics.arcade.collide(this.projectile, this.platforms);
+    this.game.physics.arcade.overlap(this.projectile, this.platforms, this._onProjectileVsWalls, null, this);
+
+    //PROJECTILE KILLS ENEMIES
     this.game.physics.arcade.overlap(this.projectile, this.spiders, this._onEnemyVsProjectile, null, this);
+
+    //PROJECTILE HITS BOSS
+    this.game.physics.arcade.overlap(this.projectile, this.boss, this._onBossVsProjectile, null, this);
 
     // enemies bounce off each other and change direction
     this.game.physics.arcade.collide(this.spiders, this.spiders);
@@ -337,33 +423,32 @@ PlayState._handleCollisions = function () {
 
 PlayState._handleInput = function () {
     if (this.keys.left.isDown) { // move hero left
-        this.hero.move(-1);
+        //this.hero.move(-1);
+        //this.boss.move(-1);
     }
     else if (this.keys.right.isDown) { // move hero right
-        this.hero.move(1);
+        //this.hero.move(1);
+        //this.boss.move(1);
     }
     else if (this.keys.downArrow.isDown) {
         this.sfx.stomp.play();
         this.projectile.body.enable = true;
-        this.projectile.body.visible = true;
-        
-        console.log(this);
+        this.projectile.visible = true;
+        fireGun(this.hero);
+        //console.log(this);
 
         if (this.hero.scale.x===1) {
-            console.log("bullet should move to right of screen");
+            //console.log("bullet should move to right of screen");
             this.projectile.x = this.hero.x+12;
             this.projectile.y = this.hero.y-1;
-            this.projectile.visible = true;
             this.projectile.move(1);
         }
         else if (this.hero.scale.x===-1) {
-            console.log("bullet should move to left of screen");
+            //console.log("bullet should move to left of screen");
             this.projectile.x = this.hero.x-12;
             this.projectile.y = this.hero.y-1;
-            this.projectile.visible = true;
             this.projectile.move(-1);
         }
-        fireGun();
     }
     else { // stop
         this.hero.move(0);
@@ -380,30 +465,59 @@ PlayState._handleInput = function () {
     }
 };
 
-function fireGun() {
+function fireGun(data) {
     if (this.isFrozen) { return; }
+    console.log(data);
+    console.log(this);
+    //new Projectile(game, data.position.x, data.position.y);
+
     //console.log(this);
+    console.log("SHOTS FIRED!");
+    //Create new instance of bullet ?
+    //this.projectile = new Projectile(this.game, data.hero.x, data.hero.y);
+    //this.game.add.existing(this.projectile);
 };
 
 PlayState._onEnemyVsProjectile = function (projectile, enemy) {
-    this.sfx.stomp.play();
-    enemy.die();
-    this.projectile.body.enable = false;
-    //this.projectile.body.visible = false;
+    this.sfx.stomp.play();  //we want to hear the sound as soon as possible, it's satisfying
+    enemy.die();            //kill the enemy as soon as possible
+    this.projectile.body.enable = false;    //disable bullet
+    this.projectile.visible = false;        //hide bullet
     enemy.body.touching = enemy.body.wasTouching;
+    console.log("Direct hit. Target neutralized.");
+};
+
+PlayState._onProjectileVsWalls = function (projectile, wall) {
+    this.sfx.stomp.play();  //we want that OH SO SATISFYING SOUND
+    this.projectile.body.enable = false;    //disable bullet
+    this.projectile.visible = false;        //hide bullet
+    console.log("Projectile hit a wall.");
+};
+
+PlayState._onBossVsProjectile = function (projectile, boss) {
+    this.sfx.stomp.play();
+    this.projectile.body.enable = false;
     this.projectile.visible = false;
+    boss.body.touching = boss.body.wasTouching;
+
+    let boss_health = 100;
+    boss_health = boss_health - 1;
+    console.log(boss_health);
+    console.log("Direct hit! Boss lost health.");
 };
 
 PlayState._onEnemyVsEnemy = function (enemy, enemy) {
-    enemy.velocity.x = enemy.velocity.x*-1;
     this.sfx.stomp.play();
+    enemy.velocity.x = enemy.velocity.x*-1; //enemies change direction when they collide
     enemy.body.touching = enemy.body.wasTouching;
+    console.log("Two enemies collided, lol.");
 };
 
 PlayState._onHeroVsKey = function (hero, key) {
     this.sfx.key.play();
     key.kill();
     this.hasKey = true;
+    console.log("You have secured the package. EVAC ASAP.");
 };
 
 PlayState._onHeroVsCoin = function (hero, coin) {
@@ -437,7 +551,7 @@ PlayState._onHeroVsDoor = function (hero, door) {
     // 'open' the door by changing its graphic and playing a sfx
     door.frame = 1;
     this.sfx.door.play();
-
+    console.log("The package has been delivered have a nice day.");
     // play 'enter door' animation and change to the next level when it ends
     hero.freeze();
     this.game.add.tween(hero)
@@ -464,10 +578,11 @@ PlayState._loadLevel = function (data) {
     this.enemyWalls = this.game.add.group();
     this.enemyWalls.visible = false;
 
-    this.projectiles = this.game.add.group();
+    //this.boss = this.game.add.group();
+    //this.projectile = this.game.add.group();
 
     // spawn hero and enemies
-    this._spawnCharacters({hero: data.hero, spiders: data.spiders, projectile: data.projectile});
+    this._spawnCharacters({hero: data.hero, spiders: data.spiders, projectile: data.projectile, boss: data.boss});
 
     //console.log(this.hero.position);
 
@@ -486,7 +601,7 @@ PlayState._loadLevel = function (data) {
     this._spawnDoor(data.door.x, data.door.y);
 
     // enable gravity
-    const GRAVITY = 1200;
+    const GRAVITY = 2000;
     this.game.physics.arcade.gravity.y = GRAVITY;
 };
 
@@ -501,13 +616,24 @@ PlayState._spawnCharacters = function (data) {
     this.hero = new Hero(this.game, data.hero.x, data.hero.y);
     this.game.add.existing(this.hero);
 
+    //console.log(data);
+    //console.log(data.hero);
     //console.log(this.hero.position.x);
     //console.log(this.hero.position.y);
     let heroX = this.hero.position.x;
     let heroY = this.hero.position.y;
 
+    //Creates a new object where the hero is
     this.projectile = new Projectile(this.game, data.hero.x, data.hero.y);
     this.game.add.existing(this.projectile);
+
+    // Creates a "fake" boss in order to initiate boss functions (prevent errors)
+    this.boss = new Boss(this.game, 2000, 2000);
+    // Logic to determine when to spawn the REAL BOSS
+    if (this.level > 1) {
+        this.boss = new Boss(this.game, 150, 150);
+        this.game.add.existing(this.boss);
+    }
 
     // PlayState._spawnProjectile = function (x, y) {
     //     this.projectile = this.projectiles.create(heroX, heroY, 'projectile');

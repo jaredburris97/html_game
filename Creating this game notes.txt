@@ -11,12 +11,10 @@ Resources: https://mozdevs.github.io/html5-games-workshop/en/bonus/resources/
 
 Step 1: Run a local server
 
-Commands: cd "HTML PLATFORM GAME"
-		 browser-sync start --server --files="**/main.js"
+	Commands: cd "my-html-game/dist"
+		 browser-sync start --server --files="**/src/js/main.js"
 
-Step 2: Follow guide from the Start: link.
-
-CURRENT PAGE: https://mozdevs.github.io/html5-games-workshop/en/guides/platformer/moving-forward/
+TUTORIAL PAGE: https://mozdevs.github.io/html5-games-workshop/en/guides/platformer/moving-forward/
 
 FEATURE LIST:
 	- gun can destroy platforms/blocks 1x1
